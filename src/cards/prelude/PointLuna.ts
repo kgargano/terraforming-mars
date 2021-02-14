@@ -2,7 +2,6 @@ import {Tags} from '../Tags';
 import {Player} from '../../Player';
 import {CorporationCard} from './../corporation/CorporationCard';
 import {IProjectCard} from '../IProjectCard';
-import {Game} from '../../Game';
 import {Resources} from '../../Resources';
 import {Card} from '../Card';
 import {CardName} from '../../CardName';
@@ -32,9 +31,9 @@ export class PointLuna extends Card implements CorporationCard {
       },
     });
   }
-  public onCardPlayed(player: Player, _game: Game, card: IProjectCard) {
+  public onCardPlayed(player: Player, card: IProjectCard) {
     const tagCount = card.tags.filter((tag) => tag === Tags.EARTH).length;
-    if (player.isCorporation(this.name) && card.tags.indexOf(Tags.EARTH) !== -1) {
+    if (player.isCorporation(this.name) && card.tags.includes(Tags.EARTH)) {
       player.drawCard(tagCount);
     }
   }

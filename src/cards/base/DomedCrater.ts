@@ -4,14 +4,12 @@ import {Tags} from '../Tags';
 import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {SelectSpace} from '../../inputs/SelectSpace';
 import {ISpace} from '../../boards/ISpace';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
-import {GlobalParameter} from '../../GlobalParameter';
 import {Units} from '../../Units';
 
 export class DomedCrater extends Card implements IProjectCard {
@@ -21,11 +19,11 @@ export class DomedCrater extends Card implements IProjectCard {
       name: CardName.DOMED_CRATER,
       tags: [Tags.CITY, Tags.BUILDING],
       cost: 24,
-      productionDelta: Units.of({energy: -1, megacredits: 3}),
+      productionBox: Units.of({energy: -1, megacredits: 3}),
 
+      requirements: CardRequirements.builder((b) => b.oxygen(7).max()),
       metadata: {
         cardNumber: 'T03',
-        requirements: CardRequirements.builder((b) => b.oxygen(7).max()),
         description: {
           text: 'Oxygen must be 7% or less. Gain 3 plants. Place a City tile. Decrease your Energy production 1 step and increase your MC production 3 steps.',
           align: 'left',
@@ -41,17 +39,17 @@ export class DomedCrater extends Card implements IProjectCard {
     });
   }
 
-  public canPlay(player: Player, game: Game): boolean {
-    return player.getProduction(Resources.ENERGY) >= 1 &&
-        game.checkMaxRequirements(player, GlobalParameter.OXYGEN, 7) &&
-        game.board.getAvailableSpacesForCity(player).length > 0;
+  public canPlay(player: Player): boolean {
+    return super.canPlay(player) &&
+      player.getProduction(Resources.ENERGY) >= 1 &&
+      player.game.board.getAvailableSpacesForCity(player).length > 0;
   }
-  public play(player: Player, game: Game) {
+  public play(player: Player) {
     return new SelectSpace(
       'Select space for city tile',
-      game.board.getAvailableSpacesForCity(player),
+      player.game.board.getAvailableSpacesForCity(player),
       (space: ISpace) => {
-        game.addCityTile(player, space.id);
+        player.game.addCityTile(player, space.id);
         player.plants += 3;
         player.addProduction(Resources.ENERGY, -1);
         player.addProduction(Resources.MEGACREDITS, 3);

@@ -5,11 +5,11 @@ import {CardType} from '../CardType';
 import {Player} from '../../Player';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
-import {Game} from '../../Game';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
 import {REDS_RULING_POLICY_COST} from '../../constants';
 import {CardRenderer} from '../render/CardRenderer';
+import {Units} from '../../Units';
 
 export class RadChemFactory extends Card implements IProjectCard {
   constructor() {
@@ -18,7 +18,7 @@ export class RadChemFactory extends Card implements IProjectCard {
       name: CardName.RAD_CHEM_FACTORY,
       tags: [Tags.BUILDING],
       cost: 8,
-      hasRequirements: false,
+      productionBox: Units.of({energy: -1}),
 
       metadata: {
         cardNumber: '205',
@@ -30,18 +30,18 @@ export class RadChemFactory extends Card implements IProjectCard {
       },
     });
   }
-  public canPlay(player: Player, game: Game): boolean {
+  public canPlay(player: Player): boolean {
     const hasEnergyProduction = player.getProduction(Resources.ENERGY) >= 1;
-    if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-      return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * 2, game, true) && hasEnergyProduction;
+    if (PartyHooks.shouldApplyPolicy(player.game, PartyName.REDS)) {
+      return player.canAfford(player.getCardCost(this) + REDS_RULING_POLICY_COST * 2, true) && hasEnergyProduction;
     }
 
     return hasEnergyProduction;
   }
 
-  public play(player: Player, game: Game) {
+  public play(player: Player) {
     player.addProduction(Resources.ENERGY, -1);
-    player.increaseTerraformRatingSteps(2, game);
+    player.increaseTerraformRatingSteps(2);
     return undefined;
   }
 }

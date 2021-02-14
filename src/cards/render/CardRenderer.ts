@@ -4,7 +4,6 @@ import {CardRenderItemSize} from './CardRenderItemSize';
 import {CardRenderItemType} from './CardRenderItemType';
 import {Tags} from '../Tags';
 import {TileType} from '../../TileType';
-import {MIN_TEMPERATURE, MAX_TEMPERATURE, MAX_OCEAN_TILES, MIN_OXYGEN_LEVEL, MAX_OXYGEN_LEVEL, MIN_VENUS_SCALE, MAX_VENUS_SCALE} from '../../constants';
 
 type ItemType = CardRenderItem | CardRenderProductionBox | CardRenderSymbol | CardRenderEffect | CardRenderTile | string | undefined;
 
@@ -159,17 +158,11 @@ class Builder {
   }
 
   public temperature(amount: number): Builder {
-    if (amount < MIN_TEMPERATURE || amount > MAX_TEMPERATURE) {
-      throw new Error('Temperature must ba above ' + MIN_TEMPERATURE + ' and below ' + MIN_TEMPERATURE);
-    }
     this._addRowItem(new CardRenderItem(CardRenderItemType.TEMPERATURE, amount));
     return this;
   }
 
   public oceans(amount: number, size: CardRenderItemSize = CardRenderItemSize.MEDIUM): Builder {
-    if (amount <= 0 || amount > MAX_OCEAN_TILES) {
-      throw new Error('Ocean tiles must be above 0 and below ' + MAX_OCEAN_TILES);
-    }
     const item = new CardRenderItem(CardRenderItemType.OCEANS, amount);
     item.size = size;
     this._addRowItem(item);
@@ -177,17 +170,11 @@ class Builder {
   }
 
   public oxygen(amount: number): Builder {
-    if (amount < MIN_OXYGEN_LEVEL || amount > MAX_OXYGEN_LEVEL) {
-      throw new Error('Oxygen must ba above ' + MIN_OXYGEN_LEVEL + ' and below ' + MAX_OXYGEN_LEVEL);
-    }
     this._addRowItem(new CardRenderItem(CardRenderItemType.OXYGEN, amount));
     return this;
   }
 
   public venus(amount: number): Builder {
-    if (amount < MIN_VENUS_SCALE || amount > MAX_VENUS_SCALE) {
-      throw new Error('Venus must ba above ' + MIN_VENUS_SCALE + ' and below ' + MAX_VENUS_SCALE);
-    }
     this._addRowItem(new CardRenderItem(CardRenderItemType.VENUS, amount));
     return this;
   }
@@ -335,7 +322,7 @@ class Builder {
     return this;
   }
 
-  public greenery(size: CardRenderItemSize = CardRenderItemSize.MEDIUM, withO2: boolean = false) {
+  public greenery(size: CardRenderItemSize = CardRenderItemSize.MEDIUM, withO2: boolean = true) {
     const item = new CardRenderItem(CardRenderItemType.GREENERY);
     item.size = size;
     if (withO2) {
@@ -422,6 +409,11 @@ class Builder {
     return this;
   }
 
+  public data(amount: number = 1) {
+    this._addRowItem(new CardRenderItem(CardRenderItemType.DATA_RESOURCE, amount));
+    return this;
+  }
+
   public multiplierWhite() {
     this._addRowItem(new CardRenderItem(CardRenderItemType.MULTIPLIER_WHITE));
     return this;
@@ -433,8 +425,8 @@ class Builder {
     return this;
   }
 
-  public moon(): Builder {
-    this._addRowItem(new CardRenderItem(CardRenderItemType.MOON));
+  public moon(amount: number = 1): Builder {
+    this._addRowItem(new CardRenderItem(CardRenderItemType.MOON, amount));
     return this;
   }
 
@@ -468,8 +460,8 @@ class Builder {
     return this;
   }
 
-  public moonMineRate(amount: number = 1): Builder {
-    this._addRowItem(new CardRenderItem(CardRenderItemType.MOON_MINE_RATE, amount));
+  public moonMiningRate(amount: number = 1): Builder {
+    this._addRowItem(new CardRenderItem(CardRenderItemType.MOON_MINING_RATE, amount));
     return this;
   }
 

@@ -52,7 +52,8 @@ class ScientistsPolicy01 implements Policy {
     return player.canAfford(10) && player.turmoilPolicyActionUsed === false;
   }
 
-  action(player: Player, game: Game) {
+  action(player: Player) {
+    const game = player.game;
     game.log('${0} used Turmoil Scientists action', (b) => b.player(player));
     game.defer(new SelectHowToPayDeferred(
       player,
@@ -60,13 +61,8 @@ class ScientistsPolicy01 implements Policy {
       {
         title: 'Select how to pay for Turmoil Scientists action',
         afterPay: () => {
-          player.cardsInHand.push(
-            game.dealer.dealCard(),
-            game.dealer.dealCard(),
-            game.dealer.dealCard(),
-          );
+          player.drawCard(3);
           player.turmoilPolicyActionUsed = true;
-          game.log('${0} drew 3 cards', (b) => b.player(player));
         },
       },
     ));

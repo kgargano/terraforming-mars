@@ -7,14 +7,13 @@ import {PowerSupplyConsortium} from '../src/cards/base/PowerSupplyConsortium';
 import {SaturnSystems} from '../src/cards/corporation/SaturnSystems';
 import {SelectOption} from '../src/inputs/SelectOption';
 import {Resources} from '../src/Resources';
-import {TestPlayers} from './TestingUtils';
+import {TestPlayers} from './TestPlayers';
 import {SerializedPlayer} from '../src/SerializedPlayer';
 import {SerializedTimer} from '../src/SerializedTimer';
 import {Player} from '../src/Player';
 import {Color} from '../src/Color';
 import {VictoryPointsBreakdown} from '../src/VictoryPointsBreakdown';
 import {CardName} from '../src/CardName';
-import {Timer} from '../src/Timer';
 
 describe('Player', function() {
   it('should initialize with right defaults', function() {
@@ -23,10 +22,10 @@ describe('Player', function() {
   });
   it('Should throw error if nothing to process', function() {
     const player = TestPlayers.BLUE.newPlayer();
-    const game = Game.newInstance('foobar', [player], player);
+    Game.newInstance('foobar', [player], player);
     (player as any).setWaitingFor(undefined, undefined);
     expect(function() {
-      player.process(game, []);
+      player.process([]);
     }).to.throw('Not waiting for anything');
   });
   it('Should run select player for PowerSupplyConsortium', function() {
@@ -34,38 +33,38 @@ describe('Player', function() {
     const player = TestPlayers.BLUE.newPlayer();
     const player2 = TestPlayers.RED.newPlayer();
     const player3 = TestPlayers.YELLOW.newPlayer();
-    const game = Game.newInstance('foobar', [player, player2, player3], player);
+    Game.newInstance('foobar', [player, player2, player3], player);
     player2.addProduction(Resources.ENERGY, 2);
     player3.addProduction(Resources.ENERGY, 2);
     player.playedCards.push(new LunarBeam());
     player.playedCards.push(new LunarBeam());
-    const action = card.play(player, Game.newInstance('foobar', [player, player2, player3], player));
+    const action = card.play(player); //  Game.newInstance('foobar', [player, player2, player3], player));
     if (action !== undefined) {
       player.setWaitingFor(action, () => undefined);
-      player.process(game, [[player2.id]]);
+      player.process([[player2.id]]);
       expect(player.getProduction(Resources.ENERGY)).to.eq(1);
     }
   });
   it('Should error with input for run select player for PowerSupplyConsortium', function() {
     const card = new PowerSupplyConsortium();
     const player = TestPlayers.BLUE.newPlayer();
-    const redPlayer = TestPlayers.RED.newPlayer();
+    // const redPlayer = TestPlayers.RED.newPlayer();
 
-    const game = Game.newInstance('foobar', [player], player);
+    Game.newInstance('foobar', [player], player);
     player.playedCards.push(new LunarBeam());
     player.playedCards.push(new LunarBeam());
-    const action = card.play(player, Game.newInstance('foobar', [player, redPlayer], player));
+    const action = card.play(player); // , Game.newInstance('foobar', [player, redPlayer], player));
     if (action !== undefined) {
       player.setWaitingFor(action, () => undefined);
       expect(player.getWaitingFor()).is.not.undefined;
       expect(function() {
-        player.process(game, [[]]);
+        player.process([[]]);
       }).to.throw('Invalid players array provided');
       expect(function() {
-        player.process(game, []);
+        player.process([]);
       }).to.throw('Incorrect options provided');
       expect(function() {
-        player.process(game, [['bar']]);
+        player.process([['bar']]);
       }).to.throw('Player not available');
     }
   });
@@ -75,22 +74,22 @@ describe('Player', function() {
     const redPlayer = TestPlayers.RED.newPlayer();
 
     player.addProduction(Resources.HEAT, 2);
-    const game = Game.newInstance('foobar', [player, redPlayer], player);
-    const action = card.play(player, Game.newInstance('foobar', [player, redPlayer], player));
+    Game.newInstance('foobar', [player, redPlayer], player);
+    const action = card.play(player); // Game.newInstance('foobar', [player, redPlayer], player));
     expect(action).is.not.undefined;
     if (action === undefined) return;
     player.setWaitingFor(action, () => undefined);
     expect(player.getWaitingFor()).is.not.undefined;
     expect(function() {
-      player.process(game, [[]]);
+      player.process([[]]);
     }).to.throw('Incorrect options provided');
     expect(function() {
-      player.process(game, []);
+      player.process([]);
     }).to.throw('Incorrect options provided');
     expect(function() {
-      player.process(game, [['foobar']]);
+      player.process([['foobar']]);
     }).to.throw('Number not provided for amount');
-    player.process(game, [['1']]);
+    player.process([['1']]);
     expect(player.getProduction(Resources.HEAT)).to.eq(1);
     expect(player.getProduction(Resources.MEGACREDITS)).to.eq(1);
     expect(player.getWaitingFor()).is.undefined;
@@ -98,17 +97,17 @@ describe('Player', function() {
   it('Runs SaturnSystems when other player plays card', function() {
     const player1 = TestPlayers.BLUE.newPlayer();
     const player2 = TestPlayers.RED.newPlayer();
-    const game = Game.newInstance('gto', [player1, player2], player1);
+    Game.newInstance('gto', [player1, player2], player1);
     const card = new IoMiningIndustries();
     const corporationCard = new SaturnSystems();
     expect(player1.getProduction(Resources.MEGACREDITS)).to.eq(0);
     player1.corporationCard = corporationCard;
-    player2.playCard(game, card, undefined);
+    player2.playCard(card, undefined);
     expect(player1.getProduction(Resources.MEGACREDITS)).to.eq(1);
   });
   it('Chains onend functions from player inputs', function(done) {
     const player = TestPlayers.BLUE.newPlayer();
-    const game = Game.newInstance('foobar', [player], player);
+    Game.newInstance('foobar', [player], player);
     const mockOption3 = new SelectOption('Mock select option 3', 'Save', () => {
       return undefined;
     });
@@ -119,15 +118,15 @@ describe('Player', function() {
       return mockOption2;
     });
     player.setWaitingFor(mockOption, () => done());
-    player.process(game, [['1']]);
+    player.process([['1']]);
     expect(player.getWaitingFor()).not.to.be.undefined;
-    player.process(game, [['1']]);
+    player.process([['1']]);
     expect(player.getWaitingFor()).not.to.be.undefined;
-    player.process(game, [['1']]);
+    player.process([['1']]);
     expect(player.getWaitingFor()).to.be.undefined;
   });
   it('serializes every property', function() {
-    const player = TestPlayers.BLUE.newPlayer();
+    const player = new Player('blue', Color.BLUE, false, 0, 'id');
     const serialized = player.serialize();
     const serializedKeys = Object.keys(serialized);
     const playerKeys = Object.keys(player).filter((key) => key !== '_game');
@@ -135,27 +134,11 @@ describe('Player', function() {
     playerKeys.sort();
     expect(serializedKeys).to.deep.eq(playerKeys);
   });
-  it('forward serialization for pickedCorporationCard', () => {
+  it('serialization test for pickedCorporationCard', () => {
     const player = TestPlayers.BLUE.newPlayer();
     player.pickedCorporationCard = new SaturnSystems();
     const json = player.serialize();
     expect(json.pickedCorporationCard).eq('Saturn Systems');
-  });
-  it('backward compatible deserialization for actionsThisGeneration', () => {
-    const player = TestPlayers.BLUE.newPlayer();
-    const json = player.serialize();
-    json.actionsThisGeneration = ['Food Factory', 'Gene Repair'] as Array<CardName>;
-    const s: SerializedPlayer = JSON.parse(JSON.stringify(json));
-    expect(s.actionsThisGeneration).to.deep.eq([CardName.FOOD_FACTORY, CardName.GENE_REPAIR]);
-    const p = Player.deserialize(s);
-    expect(Array.from(p.getActionsThisGeneration())).to.deep.eq([CardName.FOOD_FACTORY, CardName.GENE_REPAIR]);
-  });
-  it('backward compatible deserialization for timer', () => {
-    const player = TestPlayers.BLUE.newPlayer();
-    const json: any = player.serialize();
-    json.timer = undefined;
-    const p = Player.deserialize(json);
-    expect(p.timer.serialize()).to.deep.eq(Timer.newInstance().serialize());
   });
   it('serialization test', () => {
     const json = {
@@ -232,15 +215,8 @@ describe('Player', function() {
       } as SerializedTimer,
     };
 
-    const legacyPlayer = Player.deserialize(json as SerializedPlayer, false);
-    const newPlayer = Player.deserialize(json as SerializedPlayer, true);
+    const newPlayer = Player.deserialize(json as SerializedPlayer);
 
-    expect(legacyPlayer.color).eq(Color.PURPLE);
     expect(newPlayer.color).eq(Color.PURPLE);
-
-    const legacyPlayerSerialized = legacyPlayer.serialize();
-    const newPlayerSerialized = newPlayer.serialize();
-    expect(legacyPlayerSerialized, 'legacy vs new').to.deep.eq(newPlayerSerialized);
-    expect(legacyPlayerSerialized, 'legacy vs json').to.deep.eq(json);
   });
 });

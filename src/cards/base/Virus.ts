@@ -3,7 +3,6 @@ import {Tags} from '../Tags';
 import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {OrOptions} from '../../inputs/OrOptions';
 import {PlayerInput} from '../../PlayerInput';
 import {CardName} from '../../CardName';
@@ -20,7 +19,6 @@ export class Virus extends Card implements IProjectCard {
       name: CardName.VIRUS,
       tags: [Tags.MICROBE],
       cost: 1,
-      hasRequirements: false,
 
       metadata: {
         cardNumber: '050',
@@ -32,21 +30,18 @@ export class Virus extends Card implements IProjectCard {
       },
     });
   }
-  public canPlay(): boolean {
-    return true;
-  }
-  public play(player: Player, game: Game): PlayerInput | undefined {
-    if (game.getPlayers().length === 1) {
-      game.someoneHasRemovedOtherPlayersPlants = true;
+  public play(player: Player): PlayerInput | undefined {
+    if (player.game.getPlayers().length === 1) {
+      player.game.someoneHasRemovedOtherPlayersPlants = true;
       return undefined;
     }
 
-    const orOptionsAnimals = (new RemoveResourcesFromCard(player, game, ResourceType.ANIMAL, 2, false, false)).execute() as OrOptions;
+    const orOptionsAnimals = (new RemoveResourcesFromCard(player, ResourceType.ANIMAL, 2, false, false)).execute() as OrOptions;
     const removeAnimals = orOptionsAnimals !== undefined ?
       orOptionsAnimals.options[0] :
       undefined;
 
-    const orOptionsPlants = (new RemoveAnyPlants(player, game, 5)).execute() as OrOptions;
+    const orOptionsPlants = (new RemoveAnyPlants(player, 5)).execute() as OrOptions;
     const removePlants = orOptionsPlants !== undefined ?
       orOptionsPlants.options.slice(0, -1) :
       undefined;

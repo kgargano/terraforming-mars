@@ -17,10 +17,10 @@ export class BeamFromAThoriumAsteroid extends Card implements IProjectCard {
       tags: [Tags.JOVIAN, Tags.SPACE, Tags.ENERGY],
       cost: 32,
 
+      requirements: CardRequirements.builder((b) => b.tag(Tags.JOVIAN)),
       metadata: {
         cardNumber: '058',
         description: 'Requires a Jovian tag. Increase your heat production and Energy production 3 steps each',
-        requirements: CardRequirements.builder((b) => b.tag(Tags.JOVIAN)),
         renderData: CardRenderer.builder((b) => {
           b.production((pb) => {
             pb.heat(3).br;
@@ -30,9 +30,6 @@ export class BeamFromAThoriumAsteroid extends Card implements IProjectCard {
         victoryPoints: 1,
       },
     });
-  }
-  public canPlay(player: Player): boolean {
-    return player.getTagCount(Tags.JOVIAN) >= 1;
   }
   public play(player: Player) {
     player.addProduction(Resources.HEAT, 3);

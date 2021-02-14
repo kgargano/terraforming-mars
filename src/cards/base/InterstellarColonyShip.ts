@@ -3,7 +3,6 @@ import {Tags} from '../Tags';
 import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {CardName} from '../../CardName';
 import {CardRequirements} from '../CardRequirements';
 
@@ -15,18 +14,15 @@ export class InterstellarColonyShip extends Card implements IProjectCard {
       tags: [Tags.EARTH, Tags.SPACE],
       cost: 24,
 
+      requirements: CardRequirements.builder((b) => b.tag(Tags.SCIENCE, 5)),
       metadata: {
         description: 'Requires that you have 5 Science tags.',
         cardNumber: '027',
-        requirements: CardRequirements.builder((b) => b.tag(Tags.SCIENCE, 5)),
         victoryPoints: 4,
       },
     });
   }
-  public canPlay(player: Player): boolean {
-    return player.getTagCount(Tags.SCIENCE) >= 5;
-  }
-  public play(player: Player, _game: Game) {
+  public play(player: Player) {
     if (player.getTagCount(Tags.SCIENCE) < 5) {
       throw 'Requires 5 science tags.';
     }

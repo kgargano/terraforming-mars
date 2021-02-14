@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import {Player} from '../../src/Player';
 import {Game} from '../../src/Game';
 import {Turmoil} from '../../src/turmoil/Turmoil';
-import {resetBoard, setCustomGameOptions, setRulingPartyAndRulingPolicy, TestPlayers} from '../TestingUtils';
+import {TestingUtils, setCustomGameOptions, TestPlayers} from '../TestingUtils';
 import {Reds, REDS_BONUS_1, REDS_BONUS_2, REDS_POLICY_3} from '../../src/turmoil/parties/Reds';
 import {Resources} from '../../src/Resources';
 
@@ -17,11 +17,11 @@ describe('Reds', function() {
     turmoil = game.turmoil!;
     reds = new Reds();
 
-    resetBoard(game);
+    TestingUtils.resetBoard(game);
   });
 
   it('Ruling bonus 1: The player(s) with the lowest TR gains 1 TR', function() {
-    player.increaseTerraformRating(game);
+    player.increaseTerraformRating();
 
     const secondPlayerInitialTR = secondPlayer.getTerraformRating();
     const bonus = REDS_BONUS_1;
@@ -30,7 +30,7 @@ describe('Reds', function() {
   });
 
   it('Ruling bonus 2: The player(s) with the highest TR loses 1 TR', function() {
-    player.increaseTerraformRating(game);
+    player.increaseTerraformRating();
 
     const playerInitialTR = player.getTerraformRating();
     const bonus = REDS_BONUS_2;
@@ -39,16 +39,16 @@ describe('Reds', function() {
   });
 
   it('Ruling policy 1: When you take an action that raises TR, you MUST pay 3 MC per step raised', function() {
-    setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[0].id);
+    TestingUtils.setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[0].id);
 
     player.megaCredits = 3;
-    player.increaseTerraformRating(game);
+    player.increaseTerraformRating();
     game.deferredActions.runNext();
     expect(player.megaCredits).to.eq(0);
   });
 
   it('Ruling policy 2: When you place a tile, pay 3 MC or as much as possible', function() {
-    setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[1].id);
+    TestingUtils.setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[1].id);
 
     player.megaCredits = 3;
     game.addGreenery(player, '10');
@@ -57,24 +57,24 @@ describe('Reds', function() {
   });
 
   it('Ruling policy 3: Pay 4 MC to reduce a non-maxed global parameter 1 step', function() {
-    setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[2].id);
+    TestingUtils.setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[2].id);
 
     const redsPolicy = REDS_POLICY_3;
     player.megaCredits = 7;
     game.increaseOxygenLevel(player, 1);
     expect(game.getOxygenLevel()).to.eq(1);
 
-    expect(redsPolicy.canAct(player, game)).to.be.true;
-    redsPolicy.action(player, game);
+    expect(redsPolicy.canAct(player)).to.be.true;
+    redsPolicy.action(player);
     game.deferredActions.runNext();
 
     expect(player.megaCredits).to.eq(3);
     expect(game.getOxygenLevel()).to.eq(0);
-    expect(redsPolicy.canAct(player, game)).to.be.false;
+    expect(redsPolicy.canAct(player)).to.be.false;
   });
 
   it('Ruling policy 4: When you raise a global parameter, decrease your MC production 1 step per step raised if possible', function() {
-    setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[3].id);
+    TestingUtils.setRulingPartyAndRulingPolicy(game, turmoil, reds, reds.policies[3].id);
 
     game.increaseOxygenLevel(player, 1);
     expect(player.getProduction(Resources.MEGACREDITS)).to.eq(-1);

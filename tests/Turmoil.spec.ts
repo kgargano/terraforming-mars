@@ -2,14 +2,13 @@ import {expect} from 'chai';
 import {Player} from '../src/Player';
 import {PartyName} from '../src/turmoil/parties/PartyName';
 import {Game} from '../src/Game';
-import {Unity} from '../src/turmoil/parties/Unity';
 import {MarsFirst} from '../src/turmoil/parties/MarsFirst';
 import {Phase} from '../src/Phase';
 import {OrOptions} from '../src/inputs/OrOptions';
 import {SelectSpace} from '../src/inputs/SelectSpace';
 import {SpaceBonus} from '../src/SpaceBonus';
 import {Turmoil} from '../src/turmoil/Turmoil';
-import {resetBoard, maxOutOceans, setCustomGameOptions, TestPlayers} from './TestingUtils';
+import {TestingUtils, setCustomGameOptions, TestPlayers} from './TestingUtils';
 import {Reds} from '../src/turmoil/parties/Reds';
 import {ReleaseOfInertGases} from '../src/cards/base/ReleaseOfInertGases';
 import {JovianEmbassy} from '../src/cards/promo/JovianEmbassy';
@@ -25,18 +24,20 @@ import * as constants from '../src/constants';
 import {SerializedTurmoil} from '../src/turmoil/SerializedTurmoil';
 import {PoliticalAgendas} from '../src/turmoil/PoliticalAgendas';
 import {IParty} from '../src/turmoil/parties/IParty';
-import {Greenery} from '../src/cards/standardProjects/Greenery';
+import {GreeneryStandardProject} from '../src/cards/base/standardProjects/GreeneryStandardProject';
 
 describe('Turmoil', function() {
-  let player : Player; let game : Game; let turmoil: Turmoil;
+  let player : Player; let player2 : Player; let game : Game; let turmoil: Turmoil;
 
   beforeEach(function() {
     player = TestPlayers.BLUE.newPlayer();
+    player2 = TestPlayers.RED.newPlayer();
     const gameOptions = setCustomGameOptions();
 
-    game = Game.newInstance('foobar', [player], player, gameOptions);
+    game = Game.newInstance('foobar', [player, player2], player, gameOptions);
+    game.phase = Phase.ACTION;
     turmoil = game.turmoil!;
-    resetBoard(game);
+    TestingUtils.resetBoard(game);
   });
 
   it('Should initialize with right defaults', function() {
@@ -109,35 +110,38 @@ describe('Turmoil', function() {
     // parties, changing the dominant party outcome.
     turmoil.parties.forEach((p) => p.delegates = []);
 
-    turmoil.sendDelegateToParty(player.id, PartyName.MARS, game);
-    turmoil.sendDelegateToParty(player.id, PartyName.MARS, game);
-    turmoil.sendDelegateToParty(player.id, PartyName.MARS, game);
-    turmoil.sendDelegateToParty(player.id, PartyName.MARS, game);
-    turmoil.sendDelegateToParty(player.id, PartyName.MARS, game);
+    player.setTerraformRating(20);
+    player2.setTerraformRating(21);
+
+    turmoil.sendDelegateToParty(player.id, PartyName.REDS, game);
+    turmoil.sendDelegateToParty(player.id, PartyName.REDS, game);
+    turmoil.sendDelegateToParty(player.id, PartyName.REDS, game);
+    turmoil.sendDelegateToParty(player.id, PartyName.REDS, game);
+    turmoil.sendDelegateToParty(player.id, PartyName.REDS, game);
     turmoil.sendDelegateToParty(player.id, PartyName.GREENS, game);
     turmoil.sendDelegateToParty(player.id, PartyName.GREENS, game);
+
+    game.phase = Phase.SOLAR;
     turmoil.endGeneration(game);
+
     expect(game.getPlayerById(turmoil.chairman!)).to.eq(player);
+    // both players lose 1 TR; player gains 1 TR from Reds ruling bonus, 1 TR from chairman
+    expect(player.getTerraformRating()).to.eq(21);
+    expect(player2.getTerraformRating()).to.eq(20);
 
-    expect(turmoil.lobby.size).to.eq(1);
-    expect(turmoil.rulingParty).to.eq(turmoil.getPartyByName(PartyName.MARS));
+    expect(turmoil.lobby.size).to.eq(2);
+    expect(turmoil.rulingParty).to.eq(turmoil.getPartyByName(PartyName.REDS));
     expect(turmoil.dominantParty).to.eq(turmoil.getPartyByName(PartyName.GREENS));
-  });
-
-  it('Check ruling policy: Unity', function() {
-    setRulingParty(turmoil, game, new Unity());
-    game.phase = Phase.ACTION;
-    expect(player.getTitaniumValue(game)).to.eq(4);
   });
 
   it('Does not give Mars First bonus for World Government terraforming', function() {
     setRulingParty(turmoil, game, new MarsFirst());
     game.phase = Phase.SOLAR;
 
-    player.worldGovernmentTerraforming(game);
+    player.worldGovernmentTerraforming();
     const action = player.getWaitingFor() as OrOptions;
     const placeOcean = action.options.find((option) => option.title === 'Add an ocean') as SelectSpace;
-    const steelSpace = placeOcean.availableSpaces.find((space) => space.bonus.indexOf(SpaceBonus.STEEL) !== -1);
+    const steelSpace = placeOcean.availableSpaces.find((space) => space.bonus.includes(SpaceBonus.STEEL));
 
     placeOcean.cb(steelSpace!);
     expect(player.steel).to.eq(0); // should not give ruling policy bonus
@@ -146,19 +150,20 @@ describe('Turmoil', function() {
   it('Can\'t raise TR via Standard Projects if Reds are ruling and player cannot pay', function() {
     setRulingParty(turmoil, game, new Reds());
     player.megaCredits = 14;
-    const availableStandardProjects = player.getAvailableStandardProjects(game);
+    const standardProjects = player.getStandardProjectOption();
 
     // can only use Power Plant as cannot pay 3 for Reds ruling policy
-    expect(availableStandardProjects.cards).has.lengthOf(1);
+    expect(standardProjects.enabled![0]).to.eq(true);
+    expect(standardProjects.enabled!.slice(1)).to.not.contain(true);
   });
 
   it('Can do SP greenery at normal cost if Reds are ruling and oxygen is maxed', function() {
     setRulingParty(turmoil, game, new Reds());
     player.megaCredits = 23;
-    expect(new Greenery().canAct(player, game)).equal(false);
+    expect(new GreeneryStandardProject().canAct(player)).equal(false);
 
     (game as any).oxygenLevel = constants.MAX_OXYGEN_LEVEL;
-    expect(new Greenery().canAct(player, game)).equal(true);
+    expect(new GreeneryStandardProject().canAct(player)).equal(true);
   });
 
   it('Can\'t play cards to raise TR directly if Reds are ruling and player cannot pay', function() {
@@ -167,13 +172,13 @@ describe('Turmoil', function() {
     const releaseOfInertGases = new ReleaseOfInertGases();
     const jovianEmbassy = new JovianEmbassy();
 
-    expect(releaseOfInertGases.canPlay(player, game)).is.not.true; // needs 20 MC
-    expect(jovianEmbassy.canPlay(player, game)).is.not.true; // needs 17 MC
+    expect(releaseOfInertGases.canPlay(player)).is.not.true; // needs 20 MC
+    expect(jovianEmbassy.canPlay(player)).is.not.true; // needs 17 MC
 
     player.addProduction(Resources.ENERGY, 4);
     player.megaCredits = 30;
     const magneticFieldGeneratorsPromo = new MagneticFieldGeneratorsPromo();
-    expect(magneticFieldGeneratorsPromo.canPlay(player, game)).is.not.true; // needs 31 MC
+    expect(magneticFieldGeneratorsPromo.canPlay(player)).is.not.true; // needs 31 MC
   });
 
   it('Can\'t play cards to raise TR via global parameters if Reds are ruling and player cannot pay', function() {
@@ -182,13 +187,13 @@ describe('Turmoil', function() {
     const iceAsteroid = new IceAsteroid();
     const protectedValley = new ProtectedValley();
 
-    expect(iceAsteroid.canPlay(player, game)).is.not.true; // needs 29 MC
-    expect(protectedValley.canPlay(player, game)).is.not.true; // needs 26 MC
+    expect(iceAsteroid.canPlay(player)).is.not.true; // needs 29 MC
+    expect(protectedValley.canPlay(player)).is.not.true; // needs 26 MC
 
     // can play if won't gain TR from raising global parameter
-    maxOutOceans(player, game, 9);
-    expect(protectedValley.canPlay(player, game)).is.true;
-    expect(iceAsteroid.canPlay(player, game)).is.true;
+    TestingUtils.maxOutOceans(player, 9);
+    expect(protectedValley.canPlay(player)).is.true;
+    expect(iceAsteroid.canPlay(player)).is.true;
   });
 
   it('Applies card discounts when checking canPlay while Reds are ruling', function() {
@@ -196,14 +201,14 @@ describe('Turmoil', function() {
     const nitrogenFromTitan = new NitrogenFromTitan();
 
     player.megaCredits = 29;
-    expect(nitrogenFromTitan.canPlay(player, game)).is.not.true; // needs 31 MC
+    expect(nitrogenFromTitan.canPlay(player)).is.not.true; // needs 31 MC
 
     player.playedCards.push(new SpaceStation());
-    expect(nitrogenFromTitan.canPlay(player, game)).is.true; // 25 + 6 - 2
+    expect(nitrogenFromTitan.canPlay(player)).is.true; // 25 + 6 - 2
 
     player.playedCards.push(new EarthCatapult(), new QuantumExtractor());
     player.megaCredits = 25;
-    expect(nitrogenFromTitan.canPlay(player, game)).is.true; // 25 + 6 - 6
+    expect(nitrogenFromTitan.canPlay(player)).is.true; // 25 + 6 - 6
   });
 
   it('backward compatible deserialization', () => {

@@ -10,18 +10,17 @@ import {GREENS_POLICY_1} from './Greens';
 import {TurmoilPolicy} from '../TurmoilPolicy';
 
 export class PartyHooks {
-  static applyMarsFirstRulingPolicy(game: Game, player: Player, spaceType: SpaceType) {
-    if (this.shouldApplyPolicy(game, PartyName.MARS, TurmoilPolicy.MARS_FIRST_DEFAULT_POLICY) &&
-        spaceType !== SpaceType.COLONY &&
-        game.phase === Phase.ACTION) {
+  static applyMarsFirstRulingPolicy(player: Player, spaceType: SpaceType) {
+    if (this.shouldApplyPolicy(player.game, PartyName.MARS, TurmoilPolicy.MARS_FIRST_DEFAULT_POLICY) &&
+        spaceType !== SpaceType.COLONY) {
       player.setResource(Resources.STEEL, 1);
     }
   }
 
-  static applyGreensRulingPolicy(game: Game, player: Player, space: ISpace) {
-    if (this.shouldApplyPolicy(game, PartyName.GREENS, TurmoilPolicy.GREENS_DEFAULT_POLICY)) {
+  static applyGreensRulingPolicy(player: Player, space: ISpace) {
+    if (this.shouldApplyPolicy(player.game, PartyName.GREENS, TurmoilPolicy.GREENS_DEFAULT_POLICY)) {
       const greensPolicy = GREENS_POLICY_1;
-      greensPolicy.onTilePlaced(player, space, game);
+      greensPolicy.onTilePlaced(player, space);
     }
   }
 
@@ -29,6 +28,8 @@ export class PartyHooks {
   // the default policy for `partyName`.
   static shouldApplyPolicy(game: Game, partyName: PartyName, policyId?: PolicyId): boolean {
     if (!game.gameOptions.turmoilExtension) return false;
+
+    if (game.phase !== Phase.ACTION) return false;
 
     const turmoil = game.turmoil!;
     if (!turmoil) return false;

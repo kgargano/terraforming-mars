@@ -1,7 +1,7 @@
 import {Player} from '../Player';
 import {Tags} from '../cards/Tags';
 import {IProjectCard} from '../cards/IProjectCard';
-import {DeferredAction} from './DeferredAction';
+import {DeferredAction, Priority} from './DeferredAction';
 import {SelectCard} from '../inputs/SelectCard';
 import {ResourceType} from '../ResourceType';
 import {CardType} from '../cards/CardType';
@@ -10,6 +10,7 @@ import {LogHelper} from '../LogHelper';
 
 // <T> is the return value type
 export class DrawCards<T extends undefined | SelectCard<IProjectCard>> implements DeferredAction {
+  public priority = Priority.DRAW_CARDS;
   private constructor(
     public player: Player,
     public count: number = 1,
@@ -92,6 +93,7 @@ export namespace DrawCards {
     if (options.paying) {
       max = Math.min(max, Math.floor(player.spendableMegacredits() / player.cardCost));
     }
+    const min = options.paying ? 0 : options.keepMax;
     const msg = options.paying ? (max === 0 ? 'You cannot afford any cards' : 'Select card(s) to buy') :
       `Select ${max} card(s) to keep`;
     const button = max === 0 ? 'Oh' : (options.paying ? 'Buy' : 'Select');
@@ -106,7 +108,7 @@ export namespace DrawCards {
             },
           }));
       } else {
-        keep(player, selected);
+        keep(player, selected, options.paying ? DrawCards.LogType.BOUGHT : DrawCards.LogType.DREW);
         discard(player, selected, cards);
       }
       return undefined;
@@ -117,6 +119,10 @@ export namespace DrawCards {
       cards,
       cb,
       max,
-      0);
+      min,
+      false,
+      undefined,
+      false,
+    );
   }
 }

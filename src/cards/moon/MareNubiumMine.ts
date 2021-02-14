@@ -4,19 +4,21 @@ import {CardType} from '../CardType';
 import {IProjectCard} from '../IProjectCard';
 import {Tags} from '../Tags';
 import {CardRenderer} from '../render/CardRenderer';
-import {Resources} from '../../Resources';
 import {MoonSpaces} from '../../moon/MoonSpaces';
 import {MoonExpansion} from '../../moon/MoonExpansion';
-import {Card} from '../Card';
 import {Units} from '../../Units';
+import {TileType} from '../../TileType';
+import {IMoonCard} from './IMoonCard';
+import {MoonCard} from './MoonCard';
 
-export class MareNubiumMine extends Card implements IProjectCard {
+export class MareNubiumMine extends MoonCard implements IProjectCard, IMoonCard {
   constructor() {
     super({
       name: CardName.MARE_NUBIUM_MINE,
       cardType: CardType.AUTOMATED,
       tags: [Tags.MOON, Tags.BUILDING],
       cost: 17,
+      productionBox: Units.of({titanium: 1}),
 
       metadata: {
         description: 'Spend 1 titanium. Increase your titanium production 1 step. Place a mine ON THE RESERVED AREA and raise Mining Rate 1 step.',
@@ -26,14 +28,15 @@ export class MareNubiumMine extends Card implements IProjectCard {
           b.production((pb) => pb.titanium(1)).moonMine().asterix();
         }),
       },
+    }, {
+      reserveUnits: Units.of({titanium: 1}),
+      tilesBuilt: [TileType.MOON_MINE],
     });
   }
 
-  public reserveUnits = Units.of({titanium: 1});
 
   public play(player: Player) {
-    Units.deductUnits(this.reserveUnits, player);
-    player.addProduction(Resources.TITANIUM, 1);
+    super.play(player);
     MoonExpansion.addMineTile(player, MoonSpaces.MARE_NUBIUM, this.name);
     MoonExpansion.raiseMiningRate(player);
     return undefined;

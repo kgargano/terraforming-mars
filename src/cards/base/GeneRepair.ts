@@ -3,7 +3,6 @@ import {Tags} from '../Tags';
 import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
 import {CardRequirements} from '../CardRequirements';
@@ -17,19 +16,16 @@ export class GeneRepair extends Card implements IProjectCard {
       tags: [Tags.SCIENCE],
       cost: 12,
 
+      requirements: CardRequirements.builder((b) => b.tag(Tags.SCIENCE, 3)),
       metadata: {
         cardNumber: '091',
-        requirements: CardRequirements.builder((b) => b.tag(Tags.SCIENCE, 3)),
         renderData: CardRenderer.builder((b) => b.production((pb) => pb.megacredits(2))),
         description: 'Requires 3 science tags. Increase your MC production 2 steps.',
         victoryPoints: 2,
       },
     });
   }
-  public canPlay(player: Player): boolean {
-    return player.getTagCount(Tags.SCIENCE) >= 3;
-  }
-  public play(player: Player, _game: Game) {
+  public play(player: Player) {
     if (player.getTagCount(Tags.SCIENCE) < 3) {
       throw 'Requires 3 science tags.';
     }

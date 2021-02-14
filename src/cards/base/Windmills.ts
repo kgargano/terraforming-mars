@@ -3,13 +3,13 @@ import {Tags} from '../Tags';
 import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {PlayerInput} from '../../PlayerInput';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
 import {GlobalParameter} from '../../GlobalParameter';
+import {Units} from '../../Units';
 
 export class Windmills extends Card implements IProjectCard {
   constructor() {
@@ -18,10 +18,11 @@ export class Windmills extends Card implements IProjectCard {
       name: CardName.WINDMILLS,
       tags: [Tags.ENERGY, Tags.BUILDING],
       cost: 6,
+      productionBox: Units.of({energy: 1}),
 
+      requirements: CardRequirements.builder((b) => b.oxygen(7)),
       metadata: {
         cardNumber: '168',
-        requirements: CardRequirements.builder((b) => b.oxygen(7)),
         renderData: CardRenderer.builder((b) => {
           b.production((pb) => pb.energy(1));
         }),
@@ -30,8 +31,8 @@ export class Windmills extends Card implements IProjectCard {
       },
     });
   }
-  public canPlay(player: Player, game: Game): boolean {
-    return game.checkMinRequirements(player, GlobalParameter.OXYGEN, 7);
+  public canPlay(player: Player): boolean {
+    return player.game.checkMinRequirements(player, GlobalParameter.OXYGEN, 7);
   }
   public play(player: Player): PlayerInput | undefined {
     player.addProduction(Resources.ENERGY);

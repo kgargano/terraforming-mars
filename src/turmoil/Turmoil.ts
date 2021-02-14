@@ -11,7 +11,7 @@ import {Game} from '../Game';
 import {GlobalEventDealer, getGlobalEventByName} from './globalEvents/GlobalEventDealer';
 import {IGlobalEvent} from './globalEvents/IGlobalEvent';
 import {ISerializable} from '../ISerializable';
-import {SerializedParty, SerializedTurmoil} from './SerializedTurmoil';
+import {SerializedTurmoil} from './SerializedTurmoil';
 import {PLAYER_DELEGATES_COUNT} from '../constants';
 import {AgendaStyle, PoliticalAgendasData, PoliticalAgendas} from './PoliticalAgendas';
 
@@ -273,13 +273,6 @@ export class Turmoil implements ISerializable<SerializedTurmoil> {
         }
 
         this.chairman = this.rulingParty.partyLeader || 'NEUTRAL';
-        if (this.chairman !== 'NEUTRAL') {
-          const player = game.getPlayerById(this.chairman);
-          player.increaseTerraformRating(game);
-          game.log('${0} is the new chairman and got 1 TR increase', (b) => b.player(player));
-        } else {
-          game.log('A neutral delegate is the new chairman.');
-        }
 
         const index = this.rulingParty.delegates.indexOf(this.rulingParty.partyLeader!);
         // Remove the party leader from the delegates array
@@ -292,6 +285,15 @@ export class Turmoil implements ISerializable<SerializedTurmoil> {
         this.rulingParty.delegates = [];
 
         PoliticalAgendas.setNextAgenda(this, game);
+
+        // Finally, award Chairman TR
+        if (this.chairman !== 'NEUTRAL') {
+          const player = game.getPlayerById(this.chairman);
+          player.increaseTerraformRating();
+          game.log('${0} is the new chairman and got 1 TR increase', (b) => b.player(player));
+        } else {
+          game.log('A neutral delegate is the new chairman.');
+        }
       }
     }
 
@@ -411,7 +413,7 @@ export class Turmoil implements ISerializable<SerializedTurmoil> {
             name: p.name,
             delegates: p.delegates,
             partyLeader: p.partyLeader,
-          } as SerializedParty;
+          };
         }),
         playersInfluenceBonus: Array.from(this.playersInfluenceBonus.entries()),
         globalEventDealer: this.globalEventDealer.serialize(),

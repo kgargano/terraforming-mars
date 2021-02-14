@@ -3,7 +3,6 @@ import {Tags} from '../Tags';
 import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
 import {CardRequirements} from '../CardRequirements';
@@ -14,12 +13,12 @@ export class LightningHarvest extends Card implements IProjectCard {
     super({
       cardType: CardType.AUTOMATED,
       name: CardName.LIGHTNING_HARVEST,
-      tags: [Tags.ENERGY],
       cost: 8,
+      tags: [Tags.ENERGY],
 
+      requirements: CardRequirements.builder((b) => b.tag(Tags.SCIENCE, 3)),
       metadata: {
         cardNumber: '046',
-        requirements: CardRequirements.builder((b) => b.tag(Tags.SCIENCE, 3)),
         renderData: CardRenderer.builder((b) => {
           b.production((pb) => pb.energy(1).megacredits(1));
         }),
@@ -29,17 +28,12 @@ export class LightningHarvest extends Card implements IProjectCard {
     });
   }
 
-  public canPlay(player: Player): boolean {
-    return player.getTagCount(Tags.SCIENCE) >= 3;
-  }
-  public play(player: Player, _game: Game) {
-    if (player.getTagCount(Tags.SCIENCE) < 3) {
-      throw 'Requires 3 science tags';
-    }
+  public play(player: Player) {
     player.addProduction(Resources.ENERGY);
     player.addProduction(Resources.MEGACREDITS);
     return undefined;
   }
+
   public getVictoryPoints() {
     return 1;
   }

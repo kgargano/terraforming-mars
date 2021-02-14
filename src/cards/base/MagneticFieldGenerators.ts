@@ -5,11 +5,11 @@ import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
-import {Game} from '../../Game';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
 import {REDS_RULING_POLICY_COST} from '../../constants';
 import {CardRenderer} from '../render/CardRenderer';
+import {Units} from '../../Units';
 
 export class MagneticFieldGenerators extends Card implements IProjectCard {
   constructor() {
@@ -18,7 +18,7 @@ export class MagneticFieldGenerators extends Card implements IProjectCard {
       name: CardName.MAGNETIC_FIELD_GENERATORS,
       tags: [Tags.BUILDING],
       cost: 20,
-      hasRequirements: false,
+      productionBox: Units.of({energy: -4, plants: 2}),
 
       metadata: {
         cardNumber: '165',
@@ -34,20 +34,20 @@ export class MagneticFieldGenerators extends Card implements IProjectCard {
     });
   }
 
-  public canPlay(player: Player, game: Game): boolean {
+  public canPlay(player: Player): boolean {
     const meetsEnergyRequirements = player.getProduction(Resources.ENERGY) >= 4;
 
-    if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-      return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * 3, game, true) && meetsEnergyRequirements;
+    if (PartyHooks.shouldApplyPolicy(player.game, PartyName.REDS)) {
+      return player.canAfford(player.getCardCost(this) + REDS_RULING_POLICY_COST * 3, true) && meetsEnergyRequirements;
     }
 
     return meetsEnergyRequirements;
   }
 
-  public play(player: Player, game: Game) {
+  public play(player: Player) {
     player.addProduction(Resources.ENERGY, -4);
     player.addProduction(Resources.PLANTS, 2);
-    player.increaseTerraformRatingSteps(3, game);
+    player.increaseTerraformRatingSteps(3);
     return undefined;
   }
 }
